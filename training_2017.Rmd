@@ -18,12 +18,12 @@ total_2017_hours$`TOTAL HOURS` <- as.numeric(total_2017_hours$`TOTAL HOURS`)
 
 under_20_2017 <- total_2017_hours %>% filter(`TOTAL HOURS` < 20 & is.na(`LEAVE START`))
 
-#support Pro data gathering
+#support Pro data gathering 
 
 support_pro_2017 <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 1)
 support_pro_2017_hours <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 2)
 
-under_10_support_pro <- support_pro_2017_hours %>% filter(`TOTAL HOURS` < 10)
+under_10_support_pro <- support_pro_2017_hours %>% filter(`TRAINING HOURS`< 10)
 
 ```
 
