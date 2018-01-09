@@ -1,0 +1,36 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r, include= T, echo = F, error = F}
+library("tidyverse")
+library("readxl")
+library("knitr")
+
+
+#sworn staff data gathering
+
+sworn_2017 <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Copy of Updated 2017 Training Database.xls", sheet = 2)
+
+total_2017_hours <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Copy of Updated 2017 Training Database.xls", sheet = 3)
+
+total_2017_hours$`TOTAL HOURS` <- as.numeric(total_2017_hours$`TOTAL HOURS`)
+
+under_20_2017 <- total_2017_hours %>% filter(`TOTAL HOURS` < 20 & is.na(`LEAVE START`))
+
+#support Pro data gathering
+
+support_pro_2017 <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 1)
+support_pro_2017_hours <- read_xls("/Users/martin.gleason/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 2)
+
+under_10_support_pro <- support_pro_2017_hours %>% filter(`TOTAL HOURS` < 10)
+
+```
+
+# Sworn Staff
+
+The following sworn staff did not make their hours in 2017 AND there was no documentation about their status regarding leave or retirement. It appears from my reading that there are 4 officers who do not have their totals done.
+```{r, include= T, echo = F}
+kable(under_20_2017)
+```
+
