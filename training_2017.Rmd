@@ -4,7 +4,7 @@ output:
   word_document: default
 
 ---
-```{r, cleaning code, echo=F, error=F, warning=, include=T, message=FALSE}
+```{r, "cleaning code", echo= F, error=F, warning=F, include=T, message=FALSE}
 
 library("tidyverse")
 library("readxl")
@@ -12,7 +12,7 @@ library("knitr")
 library("lubridate")
 
 
-#sworn staff data gathering
+#sworn staff data import and initial cleaning
 
 sworn_2017 <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/2017TrainingDatabase.xls", sheet = 2)
 
@@ -22,7 +22,7 @@ total_2017_hours$`TOTAL HOURS` <- as.numeric(total_2017_hours$`TOTAL HOURS`)
 
 under_20_2017 <- total_2017_hours %>% filter(`TOTAL HOURS` < 20 & is.na(`LEAVE START`))
 
-#support Pro data gathering 
+#support Pro data import 
 
 support_pro_2017 <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 1)
 support_pro_2017_hours <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 2)
@@ -64,8 +64,10 @@ training_histo <- trainings %>% group_by(CODE) %>% summarize(count = n(),
     ggplot(aes(x = CODE, y = count)) + geom_histogram(stat = "identity") + coord_flip()
 ```
 # Data Science and The Office of Career Services
-Demands on *OCS'* data maturity are growing rapidly. In addition to the pressures of paperless training registration, OCS is also charged with answering increasingly granular questions regarding trainings delieverd by officer or contractor, hours per unit or by category, as well as evaluating the effectiveness and retention of trainings delivered. 
+Demands on *OCS'* data are growing rapidly. In addition to the pressures of paperless training registration, OCS is also charged with answering increasingly granular questions regarding trainings delieverd by officer or contractor, hours per unit or by category, as well as evaluating the effectiveness and retention of trainings delivered. It is not difficult to imagine that, along with these descriptive figures, the Court will want more *inferential* statitsics as well. Put differently, OCS will have to describe the kind of work that is done, but also demonstrate that training has a positive effect on probation outcomes. While this report will clearly showcase how data science can improve OCS' data maturity, the tools and methods described here can easily shifted towards other research projects. 
 
+# Tools and Methods
+This report uses [R](https://www.r-project.org) and [R Studio](https://www.rstudio.com) for the statisitcal analysis as well as the body of the report. The 2017 data was captured by OCS staff into an Excel spreadsheet, commonly referred to as the "Training Database."
 ```{r quarter_function, include= T}
 require(lubridate)
 
