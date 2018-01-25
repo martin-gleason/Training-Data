@@ -4,7 +4,7 @@ output:
   word_document: default
 
 ---
-```{r echo=F, error=F, warning=, include=T, message=FALSE}
+```{r echo=F, error=F, warning= F, include=T, message=FALSE}
 
 library("tidyverse")
 library("readxl")
