@@ -1,0 +1,138 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+
+---
+```{r echo=F, error=F, warning=, include=T, message=FALSE}
+
+library("tidyverse")
+library("readxl")
+library("knitr")
+library("lubridate")
+library("stringi")
+
+
+#sworn staff data gathering
+
+sworn_2017 <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/2017TrainingDatabase.xls", sheet = 2)
+
+total_2017_hours <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/2017TrainingDatabase.xls", sheet = 3)
+
+total_2017_hours$`TOTAL HOURS` <- as.numeric(total_2017_hours$`TOTAL HOURS`)
+
+under_20_2017 <- total_2017_hours %>% filter(`TOTAL HOURS` < 20 & is.na(`LEAVE START`))
+
+#support Pro data gathering 
+
+support_pro_2017 <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 1)
+support_pro_2017_hours <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/Updated Support Staff 2017.xls", sheet = 2)
+
+under_10_support_pro <- support_pro_2017_hours %>% filter(`TRAINING HOURS`< 10)
+
+title_of_training <- sworn_2017 %>% filter(!is.na(`TITLE OF TRAINING`)) %>% 
+  select(`TITLE OF TRAINING`) %>% unique()
+
+suport_training_titles <- support_pro_2017 %>% filter(!is.na(`TITLE OF TRAINING`)) %>%
+  select(`TITLE OF TRAINING`) %>% unique()
+
+#gathering total trainings
+title_of_training <- title_of_training %>% bind_rows(suport_training_titles) %>% unique()
+
+#getting training staff hours
+
+trainings <- read_xls("/Users/marty/Dropbox (Personal)/Documents/Training/Database/2017TrainingDatabase.xls", sheet = 5)
+trainings$`DATE(S) ATTENDED`  <- as.Date(as.numeric(trainings$`DATE(S) ATTENDED`), origin = "1899-12-30")
+trainings$Training_end_date <- as.Date(trainings$Training_end_date, origin = "1899-12-30")
+
+
+joe <- "Joe Pacelt"
+karla <- "Karla Chinchilla"
+aviv <- "Aviv Hibbler"
+leti <- "Leticia Barrera"
+sylvia <- "Sylvia Rivera"
+
+trainers <- c(joe, karla, aviv, sylvia, leti)
+
+training_by_trainer <- trainings[trainings$PRESENTOR %in% trainers, ]
+
+train_code <- trainings %>% mutate(quarter = quarter(`DATE(S) ATTENDED`)) %>% group_by(CODE, quarter) %>% 
+  summarize(count = n(),
+            total_hours = sum(`HOURS EARNED`))
+
+training_histo <- trainings %>% group_by(CODE) %>% summarize(count = n(),
+                                           total_hors = sum(`HOURS EARNED`)) %>%
+    ggplot(aes(x = CODE, y = count)) + geom_histogram(stat = "identity") + coord_flip()
+```
+
+```{r quarter_function, include= T}
+require(lubridate)
+
+##library(lubridate)
+##Data <- Data %>%
+##  mutate(qtr = paste0(substring(year(date),2,4),"/0",quarter(date))) 
+##from Jeff Parker, https://stackoverflow.com/users/6896760/jeff-parker
+
+
+quarter_date <- function(x, na.rm, ...) {
+  origin_default <- "1899-12-30"
+  quarter(x, with_year = TRUE)
+}
+
+
+date_test <- as.Date(trainings$Training_end_date, origin = "1899-12-30")
+
+```
+# Sworn Staff
+
+The following sworn staff did not make their hours in 2017 AND there was no documentation about their status regarding leave or retirement. It appears from my reading that there are 4 officers who do not have their totals done.
+```{r, include= T, echo = F}
+kable(under_20_2017)
+```
+## Sworn Staff Metrics
+
+```{r, include = T, echo = F, warning = F}
+
+mean_hours <- mean(total_2017_hours$`TOTAL HOURS`, na.rm = T)
+median_hours <- median(total_2017_hours$`TOTAL HOURS`, na.rm = T)
+summary_hours <- summary(total_2017_hours$`TOTAL HOURS`, na.rm = T)
+
+
+groupby2017Employee <- sworn_2017 %>% group_by(`EMPLOYEE NAME`) %>%  summarize(training_count = n(),
+                                                        total_hours = sum(HOURS, na.rm = T))
+       
+```
+
+# Support Professionals
+
+The following support professionals did not not hit their requisite 10 hours, and there was no documenation indicating status of leave or retirement.
+
+```{r, include= T, echo = F}
+kable(under_10_support_pro)
+```
+
+# Number of Trainings 
+
+530 trainings were offered in FY 2017 based on the records in the database. We appear to have missed the training target by 11%, and a reduction from 2016's actual by [^1]. The titles of all trainings were as follows:
+```{r, include = T, echo = F}
+kable(title_of_training)
+```
+
+# Trainings by Code
+```{r, include = T, echo = F, message= F}
+
+##how loop works: Find unique training codes. For each code in the training table, filter a NEW table based on the name of the code AND _2017
+
+codes <- unique(trainings$CODE)
+
+for (codes in trainings$CODE) {
+  x <- paste(codes, sep = "_", "2017")
+   assign(paste0(x), (filter(trainings, CODE == codes)))
+}
+
+C_2017$CODE <- C_2017$CODE %>% str_replace_all("C", "Computer")
+
+
+```
+
+[^1]: 600 - 531 = `r 600 - 531`, and 69/600 = `r 69/600`. 587 was the 2016 actual, which gives us `r 587-531`, and 56/587 = `r 56/587`. 
