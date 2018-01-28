@@ -74,11 +74,18 @@ staff_training_total <- (length(unique(sworn_2017$`TITLE OF TRAINING`)))
 Demands on *OCS'* data are growing rapidly. In addition to the pressures of paperless training registration, OCS is also charged with answering increasingly granular questions regarding trainings delieverd by officer or contractor, hours per unit or by category, as well as evaluating the effectiveness and retention of trainings delivered. It is not difficult to imagine that, along with these descriptive figures, the Court will want more *inferential* statitsics as well. Put differently, OCS will have to describe the kind of work that is done, but also demonstrate that training has a positive effect on probation outcomes. While this report will clearly showcase how data science can improve OCS' data maturity, the tools and methods described here can easily shifted towards other research projects. 
 
 # Tools and Methods
-This report uses [R](https://www.r-project.org) and [R Studio](https://www.rstudio.com) for the statisitcal analysis as well as the body of the report. The 2017 data was captured by OCS staff into an Excel spreadsheet, commonly referred to as the "Training Database." Previous years of training data have also been captured in Excel due to the software's ubiquity and a department-wide move away from Acess; however, given the amount of data that OCS is required to track and information it is requried to produce, Excel is no longer the best option. For instance, there currently two 2017 databases. The sworn office document contains 3 distinct workbooks tracking: Total Hours by Officer, Trainings offered in 2017, Trainer Data, and a pivot table. The 2017 Training sheet has a total of `r nrow(sworn_2017)` (which represents officers) and `r ncol(sworn_2017)`, which  *should* represent a rough number of trainings offered. In total, there `r ncol(sworn_2017) * nrow(sworn_2017)` records in one sheet. The Support Proffessionals has a similar issue: Two sheets, Total hours and the trainings offered in 2017. The support staff report has `r nrow(support_pro_2017)` rows--which again represents support staff-- and `r ncol(support_pro_2017)` which should represent number of trainings. This sheet has a total of `r nrow(support_pro_2017) * ncol(support_pro_2017)` records.
+This report uses [R](https://www.r-project.org) and [R Studio](https://www.rstudio.com) for the statisitcal analysis as well as the body of the report. The 2017 data was captured by OCS staff into an Excel spreadsheet, commonly referred to as the "Training Database." R allows indepth analysis and reporitng of the data that is captured, even when the data is in a messy state[^1]. This tool will also allow for finding insights in the 2017 data and creating new ways to capture and store OCS data.
 
-Both totals showcase the problems with the way Excel has been used to track our data: We do not employ `r nrow(sworn_2017) + nrow(support_pro_2017)` staff, and we delivered far more than `r ncol(sworn_2017) + ncol(support_pro_2017)` trainings. In fact, the records suggest that `r support_trainings + staff_training_total` trainings were delivered. The way in which the data has been stored works for simple queries releated to the data such as: How many hours did each officer recieve, when were trainings offered, who conducted the trainings. Even questions about the kinds of training are relatively easy to determine. Additional questions, such as trainings per month or quarter, determining how many hours of training were delievered by each OCS officer, or
+## Excel and Moving Forward
+The 2017 Excel spreadsheet is the same spreadsheet that has been have been used to capture data in for years. Excel was chosen to the software's ubiquity and a department-wide move away from Acess; however, given the amount of data that OCS is required to track and information it is requried to produce, Excel is no longer the best option. 
 
-```{r quarter_function, include= T, echo = F, message=F}
+For example, there currently two 2017 databases. The sworn office document contains 3 distinct workbooks tracking: Total Hours by Officer, Trainings offered in 2017, Trainer Data, and a pivot table. The 2017 Training sheet has a total of `r nrow(sworn_2017)` (which represents officers) and `r ncol(sworn_2017)`, which  *should* represent a rough number of trainings offered. In total, there `r ncol(sworn_2017) * nrow(sworn_2017)` records in one sheet. The Support Proffessionals has a similar issue: Two sheets, Total hours and the trainings offered in 2017. The support staff report has `r nrow(support_pro_2017)` rows--which again represents support staff-- and `r ncol(support_pro_2017)` which should represent number of trainings. This sheet has a total of `r nrow(support_pro_2017) * ncol(support_pro_2017)` records.
+
+Both totals showcase the problems with the way Excel has been used to track our data: We do not employ `r nrow(sworn_2017) + nrow(support_pro_2017)` staff, and we delivered far more than `r ncol(sworn_2017) + ncol(support_pro_2017)` trainings. In fact, the records suggest that `r support_trainings + staff_training_total` trainings were delivered. The way in which the data has been stored works for simple queries releated to the data such as: How many hours did each officer recieve, when were trainings offered, who conducted the trainings. Even questions about the kinds of training are relatively easy to determine. Additional questions, such as trainings per month or quarter, by unit, determining how many hours of training were delievered by each OCS officer, or which category of training was delievered by which OCS officer requires either significant knowledge of Excel or a complete rework of the way data is entered into the spreadsheet. 
+
+The future of OCS data is a full Access database that captures data by forms and produces reports by pre-written queries. Using forms and reports will ensure the integreity of the data base by limiting how data is entered and transformed. This will also allow for data to be tracked year over year, without fear of duplication or input errors, and for regular, reports with the push of an export button. These reports will also make analysis, to be done in Excel or R, easier.
+
+```{r, quarter_function, include= T, echo = F, message=F}
 require(lubridate)
 
 ##library(lubridate)
@@ -94,16 +101,20 @@ quarter_date <- function(x, na.rm, ...) {
 
 
 date_test <- as.Date(trainings$Training_end_date, origin = "1899-12-30")
+```
+
+```{r, cleaning chunk, include= T, echo=F, message= F}
+tempSupport <- support_pro_2017[ ,c(1, 2, 3, 4, 5, 7)]
+
+tempSupport$DATE <- as.character(tempSupport$DATE)
+
+
+staff_2017 <- staff_2017<- sworn_2017 %>% select(-5, -7)
+
+staff_2017 <- staff_2017 %>% bind_rows(tempSupport)
 
 ```
 
-# Sworn Staff
-
-The following sworn staff did not make their hours in 2017 AND there was no documentation about their status regarding leave or retirement. It appears from my reading that there are 4 officers who do not have their totals done.
-```{r, include= T, echo = F}
-kable(under_20_2017)
-```
-## Sworn Staff Metrics
 
 ```{r, include = T, echo = F, warning = F}
 
@@ -117,23 +128,8 @@ groupby2017Employee <- sworn_2017 %>% group_by(`EMPLOYEE NAME`) %>%  summarize(t
        
 ```
 
-# Support Professionals
-
-The following support professionals did not not hit their requisite 10 hours, and there was no documenation indicating status of leave or retirement.
-
-```{r, include= T, echo = F}
-#kable(under_10_support_pro)
-```
-
-# Number of Trainings 
-
-530 trainings were offered in FY 2017 based on the records in the database. We appear to have missed the training target by 11%, and a reduction from 2016's actual by [^1]. The titles of all trainings were as follows:
-```{r, include = T, echo = F}
-#kable(title_of_training)
-```
-
 # Trainings by Code
-```{r, include = T, echo = F, message= F}
+```{r, training by code, include = T, echo = F, message= F}
 
 codes <- unique(trainings$CODE)
 new_codes <- c("Webinar", "Saftey", "Toastmasters", "Leadership", "NA", "Wellness", "Service Provider", "Support Professional", "Legal", "Effective Case Works", "Computer", "Mental Health", "Medical", "Domestic Violence", "Education", "Saftey", "YASI", "Other", "DCFS", "Equity and Inclusion", "Education--Legal", "Human Trafficking", "Substance Abuse", "Education", "Violence Prevention", "Sexually Problematic Behavior", "JDAI", "Violence Prevention", "Cyber Crime", "JTDC", "Gangs", "Clinical", "Sex Trafficking", "JDAI", "LGBTQQIA")
@@ -150,5 +146,5 @@ for (codes in trainings$CODE) {
 
 
 ```
-
-[^1]: 600 - 531 = `r 600 - 531`, and 69/600 = `r 69/600`. 587 was the 2016 actual, which gives us `r 587-531`, and 56/587 = `r 56/587`. 
+[^1]: Messy, in this instance, is a reference to tidy data and data principles, and is not in any way a reflection of the capabilties of the staff in OCS.
+[^2]: 600 - 531 = `r 600 - 531`, and 69/600 = `r 69/600`. 587 was the 2016 actual, which gives us `r 587-531`, and 56/587 = `r 56/587`. 
